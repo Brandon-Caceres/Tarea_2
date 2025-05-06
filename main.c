@@ -28,7 +28,7 @@ void mostrarMenuPrincipal() {
     puts("5) Salir");
   }
 
-void cargar_canciones(HashMap *map_genere, HashMap *map_artist){
+void cargar_canciones(HashMap *map_genere, HashMap *map_artist, List * lista_lentas, List * lista_moderadas, List * lista_rapidas){
     FILE  * archivo = fopen("data/song_dataset_.csv", "r");
     if (archivo == NULL){
         perror("Error al abrir el archivo");
@@ -48,6 +48,7 @@ void cargar_canciones(HashMap *map_genere, HashMap *map_artist){
         cancion->tempo = atof(campos[18]);
         cancion->track_genere = split_string(campos[20], ";");
 
+        //Se agregan los datos al mapa de generos
         List *generos = cancion->track_genere;
         char *genero = list_first(generos);
         while (genero != NULL){
@@ -64,6 +65,7 @@ void cargar_canciones(HashMap *map_genere, HashMap *map_artist){
             genero = list_next(generos);
         }
         
+        //Se agregan los datos al mapa de artistas
         List *artistas = cancion->artistas;
         char *artista = list_first(artistas);
         while (artista != NULL){
@@ -79,6 +81,17 @@ void cargar_canciones(HashMap *map_genere, HashMap *map_artist){
             }
             artista = list_next(artistas);
         }
+
+        if (cancion->tempo < 80){
+            list_pushBack(lista_lentas, cancion);
+        }
+        else if (cancion->tempo >= 80 && cancion->tempo <= 120){
+            list_pushBack(lista_moderadas, cancion);
+        }
+        else if (cancion->tempo > 120){
+            list_pushBack(lista_rapidas, cancion);
+        }
+
         printf("Procesando cancion %d.\n", contador);
         contador++;
     }
@@ -123,8 +136,11 @@ void buscar_genero(HashMap *map_genere){
             printf("ID: %s, Nombre de la cancion: %s, Artista/as: %s, Album: %s, Genero: %s, Tempo: %.2f\n",
                    cancion->id, cancion->track_name, artista_str, cancion->album_name, genero_str, cancion->tempo);
             cancion = list_next(canciones);
+
+            free(artista_str);
+            free(genero_str);
         }
-    } 
+    }
     else {
         printf("No se encontraron canciones con el genero '%s'.\n", genero);
     }
@@ -150,10 +166,55 @@ void buscar_artista(HashMap *map_artist){
             printf("ID: %s, Nombre de la cancion: %s, Artista/as: %s, Album: %s, Genero: %s, Tempo: %.2f\n",
                 cancion->id, cancion->track_name, artista_str, cancion->album_name, genero_str, cancion->tempo);
             cancion = list_next(canciones);
+
+            free(artista_str);
+            free(genero_str);
         }
     }
     else{
         printf("No se encontraron canciones con el artista '%s'.\n", artista);
+    }
+}
+
+void buscar_tempo(List * lista_lentas, List * lista_moderadas, List * lista_rapidas){
+    limpiarPantalla();
+    int opcion;
+
+    printf("Buscar canciones por tempo: \n");
+    printf("1) Canciones lentas\n");
+    printf("2) Canciones moderadas\n");
+    printf("3) Canciones rapidas\n");
+    printf("Ingrese su opcion: ");
+    scanf("%d", &opcion);
+    getchar();
+
+    List * lista = NULL;
+
+    if (opcion == 1){
+        lista = lista_lentas;
+    }
+    else if (opcion == 2){
+        lista = lista_moderadas;
+    }
+    else if (opcion == 3){
+        lista = lista_rapidas;
+    }
+    else{
+        printf("Opcion invalida, intene nuevamente\n");
+        return;
+    }
+
+    datos_cancion * cancion = list_first(lista);
+    while (cancion != NULL){
+        char * artista_str = lista_string(cancion->artistas);
+        char * genero_str = lista_string(cancion->track_genere);
+
+        printf("ID: %s, Nombre de la cancion: %s, Artista/as: %s, Album: %s, Genero: %s, Tempo: %.2f\n",
+            cancion->id, cancion->track_name, artista_str, cancion->album_name, genero_str, cancion->tempo);
+        cancion = list_next(lista);
+        
+        free(artista_str);
+        free(genero_str);
     }
 }
 
@@ -162,6 +223,9 @@ int main(){
 
     HashMap * map_genere = createMap(50000);
     HashMap * map_artist = createMap(50000);
+    List * lista_lentas = list_create();
+    List * lista_moderadas = list_create();
+    List * lista_rapidas = list_create();
 
     do{
         mostrarMenuPrincipal();
@@ -171,7 +235,7 @@ int main(){
         switch (opcion)
         {
         case '1':
-            cargar_canciones(map_genere, map_artist);
+            cargar_canciones(map_genere, map_artist, lista_lentas, lista_moderadas, lista_rapidas);
             break;
         case '2':
             buscar_genero(map_genere);
@@ -180,6 +244,7 @@ int main(){
             buscar_artista(map_artist);
             break;
         case '4':
+            buscar_tempo(lista_lentas, lista_moderadas, lista_rapidas);
             break;
         case '5':
             puts("Saliendo de Spotifind...");
