@@ -37,7 +37,6 @@ void cargar_canciones(HashMap *map_genere, HashMap *map_artist, List * lista_len
 
     char **campos;
     campos = leer_linea_csv(archivo, ',');
-    long contador = 0;
 
     while((campos = leer_linea_csv(archivo, ',')) != NULL){
         datos_cancion *cancion = (datos_cancion *)malloc(sizeof(datos_cancion));
@@ -91,9 +90,6 @@ void cargar_canciones(HashMap *map_genere, HashMap *map_artist, List * lista_len
         else if (cancion->tempo > 120){
             list_pushBack(lista_rapidas, cancion);
         }
-
-        printf("Procesando cancion %d.\n", contador);
-        contador++;
     }
 
     fclose(archivo);
