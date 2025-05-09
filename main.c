@@ -207,10 +207,11 @@ void buscar_tempo(List * lista_lentas, List * lista_moderadas, List * lista_rapi
 
         printf("ID: %s, Nombre de la cancion: %s, Artista/as: %s, Album: %s, Genero: %s, Tempo: %.2f\n",
             cancion->id, cancion->track_name, artista_str, cancion->album_name, genero_str, cancion->tempo);
-        cancion = list_next(lista);
         
         free(artista_str);
         free(genero_str);
+
+        cancion = list_next(lista);
     }
 }
 
