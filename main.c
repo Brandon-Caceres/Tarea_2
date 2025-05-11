@@ -9,8 +9,8 @@ typedef struct
 {
     char id[100];
     List* artistas;
-    char album_name[100];
-    char track_name[100];
+    char album_name[300];
+    char track_name[300];
     float tempo;
     List* track_genere;
 }datos_cancion;
@@ -40,10 +40,10 @@ void cargar_canciones(HashMap *map_genere, HashMap *map_artist, List * lista_len
 
     while((campos = leer_linea_csv(archivo, ',')) != NULL){
         datos_cancion *cancion = (datos_cancion *)malloc(sizeof(datos_cancion));
-        strcpy(cancion->id, campos[0]);
+        strncpy(cancion->id, campos[0], sizeof(cancion->id));
         cancion->artistas = split_string(campos[2], ";");
-        strcpy(cancion->album_name, campos[3]);
-        strcpy(cancion->track_name, campos[4]);
+        strncpy(cancion->album_name, campos[3], sizeof(cancion->album_name));
+        strncpy(cancion->track_name, campos[4], sizeof(cancion->track_name));
         cancion->tempo = atof(campos[18]);
         cancion->track_genere = split_string(campos[20], ";");
 
