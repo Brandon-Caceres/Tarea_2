@@ -105,19 +105,31 @@ void cargar_canciones(HashMap *map_genere, HashMap *map_artist, List * lista_len
 }
 
 //Funcion auxiliar que se encarga de convertir una lista de strings a un solo string separado por comas
-char* lista_string(List *lista){
+char* lista_string(List *lista) {
     if (lista == NULL) return NULL;
-    
-    char* resultado = (char*)malloc(sizeof(char));
+
+    size_t total_len = 1;
+    char *aux = list_first(lista);
+
+    // Paso 1: calcular longitud total
+    while (aux != NULL) {
+        total_len += strlen(aux) + 2;
+        aux = list_next(lista);
+    }
+
+    char *resultado = (char*)malloc(total_len);
+    if (resultado == NULL) return NULL;
     resultado[0] = '\0';
-    
-    char* aux = list_first(lista);
-    while (aux != NULL){
+
+    // Paso 2: concatenar strings
+    aux = list_first(lista);
+    while (aux != NULL) {
         strcat(resultado, aux);
         aux = list_next(lista);
         if (aux != NULL)
             strcat(resultado, ", ");
     }
+
     return resultado;
 }
 
@@ -314,10 +326,10 @@ int main(){
             break;
         case '5':
             puts("Saliendo de Spotifind...");
+            liberar_memoria(map_genere, map_artist, lista_lentas, lista_moderadas, lista_rapidas);
             break;
         default:
             puts("Opcion no valida. Intente de nuevo.");
-            liberar_memoria(map_genere, map_artist, lista_lentas, lista_moderadas, lista_rapidas);
             break;
         }
         presioneTeclaParaContinuar();
