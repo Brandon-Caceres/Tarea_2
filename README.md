@@ -34,6 +34,8 @@ gcc *.c -o main.exe
 1. No se puede volver a cargar el archivo CSV más de una vez por ejecución (evita duplicados).
 2. Posible pérdida de memoria si se cierra abruptamente sin liberar memoria.
 3. No hay validación de campos vacíos o malformateados en el CSV.
+4. Sensibilidad a mayúsculas y minúsculas a la hora de realizar una búsqueda.
+    * Ejemplo:  Si el artista en el CSV está como "Joseph Sullinger", buscar "joseph sullinger" no arrojará resultados.
 
 ## Estructura del código
 - main.c       # Programa principal
