@@ -5,6 +5,7 @@
 #include "extra.h"
 #include "hashmap.h"
 
+//Se define la estructura de los datos que se guardan por cada cancion
 typedef struct
 {
     char id[100];
@@ -15,6 +16,7 @@ typedef struct
     List* track_genere;
 }datos_cancion;
 
+//Funcion para mostrar el menu principal y limpiar la panttalla
 void mostrarMenuPrincipal() {
     limpiarPantalla();
     puts("========================================");
@@ -28,6 +30,10 @@ void mostrarMenuPrincipal() {
     puts("5) Salir");
   }
 
+/*Funcion que se encarga de cargar las canciones que se encuentran en el archivo csv y 
+las organiza en mapas y listas para poder utilizarlas en distintas operaciones, esto lo 
+hace leyendo cada linea del csv, por cada una de estas se acceden a los campos necesarios,
+y los añade a su mapa o lista correspondiente */
 void cargar_canciones(HashMap *map_genere, HashMap *map_artist, List * lista_lentas, List * lista_moderadas, List * lista_rapidas){
     FILE  * archivo = fopen("data/song_dataset_.csv", "r");
     if (archivo == NULL){
@@ -38,6 +44,7 @@ void cargar_canciones(HashMap *map_genere, HashMap *map_artist, List * lista_len
     char **campos;
     campos = leer_linea_csv(archivo, ',');
 
+    //Lee linea por linea el archivo csv
     while((campos = leer_linea_csv(archivo, ',')) != NULL){
         datos_cancion *cancion = (datos_cancion *)malloc(sizeof(datos_cancion));
         strncpy(cancion->id, campos[0], sizeof(cancion->id));
@@ -81,6 +88,7 @@ void cargar_canciones(HashMap *map_genere, HashMap *map_artist, List * lista_len
             artista = list_next(artistas);
         }
 
+        //Clasifica la cancion segun su tempo
         if (cancion->tempo < 80){
             list_pushBack(lista_lentas, cancion);
         }
@@ -96,6 +104,7 @@ void cargar_canciones(HashMap *map_genere, HashMap *map_artist, List * lista_len
     printf("Canciones cargadas con exito. \n");
 }
 
+//Funcion auxiliar que se encarga de convertir una lista de strings a un solo string separado por comas
 char* lista_string(List *lista){
     if (lista == NULL) return NULL;
     
@@ -112,6 +121,8 @@ char* lista_string(List *lista){
     return resultado;
 }
 
+/*Funcion que busca y muestra las canciones pertenecientes 
+a el genero ingresado por el usuario por el usuario*/
 void buscar_genero(HashMap *map_genere){
     char genero[100];
     getchar();
@@ -142,6 +153,7 @@ void buscar_genero(HashMap *map_genere){
     }
 }
 
+/*Funcion que busca y muestra las canciones del artista que ingrese el usuario*/
 void buscar_artista(HashMap *map_artist){
     char artista[100];
     getchar();
@@ -172,6 +184,9 @@ void buscar_artista(HashMap *map_artist){
     }
 }
 
+/*Funcion encargada de buscar canciones por su tempo, esta muestra un submenu 
+para seleccionar entre los 3 tipos de tempo existentes(lentas, moderadas, rapidas)
+y luego imprime las caqnciones pertenecientes a la categoria seleccionada por el ususario*/
 void buscar_tempo(List * lista_lentas, List * lista_moderadas, List * lista_rapidas){
     limpiarPantalla();
     int opcion;
@@ -215,8 +230,56 @@ void buscar_tempo(List * lista_lentas, List * lista_moderadas, List * lista_rapi
     }
 }
 
+/*Funcion encargada de liberar la memoria de las listas, recibe la lista
+y la recorre eliminando cada lista interna, al final limpia la lista*/
+void liberar_lista(List* lista) {
+    datos_cancion *cancion = list_first(lista);
+    while (cancion != NULL) {
+        list_clean(cancion->artistas);
+        free(cancion->artistas);
+
+        list_clean(cancion->track_genere);
+        free(cancion->track_genere);
+
+        free(cancion);
+        cancion = list_next(lista);
+    }
+    list_clean(lista);
+}
+
+/*Funcion que libera toda la memoria utilizada en el programa por los mapas y listas */
+void liberar_memoria(HashMap *map_genere, HashMap *map_artist, List *lista_lentas, List *lista_moderadas, List *lista_rapidas) {
+    // Primero liberamos las canciones a través de las listas de tempo (única fuente)
+    liberar_lista(lista_lentas);
+    liberar_lista(lista_moderadas);
+    liberar_lista(lista_rapidas);
+
+    Pair *par;
+    // Limpiar mapa de géneros
+    par = firstMap(map_genere);
+    while (par != NULL) {
+        list_clean(par->value);
+        par = nextMap(map_genere);
+    }
+
+    // Limpiar mapa de artistas
+    par = firstMap(map_artist);
+    while (par != NULL) {
+        list_clean(par->value);
+        par = nextMap(map_artist);
+    }
+
+    // Liberar los mapas
+    free(map_genere);
+    free(map_artist);
+}
+
+/*Funcion principal del programa, en este se crean 2 mapas y 3 listas para usarlas segun se necesite,
+se muestra el menu y se le solicita una opcion al usuario, dependiendo de lo que quiera el usuario 
+es la funcion a la que se llama, si el usuario abandona el programa se limpian los mapas y las listas*/
 int main(){
     char opcion;
+    int cargadas = 0;
 
     HashMap * map_genere = createMap(50000);
     HashMap * map_artist = createMap(50000);
@@ -232,7 +295,13 @@ int main(){
         switch (opcion)
         {
         case '1':
-            cargar_canciones(map_genere, map_artist, lista_lentas, lista_moderadas, lista_rapidas);
+            if(cargadas){
+                puts("Las canciones ya han sido cargadas. No es posible volver a cargarlas.");
+            }
+            else{
+                cargar_canciones(map_genere, map_artist, lista_lentas, lista_moderadas, lista_rapidas);
+                cargadas = 1;
+            }
             break;
         case '2':
             buscar_genero(map_genere);
@@ -248,6 +317,7 @@ int main(){
             break;
         default:
             puts("Opcion no valida. Intente de nuevo.");
+            liberar_memoria(map_genere, map_artist, lista_lentas, lista_moderadas, lista_rapidas);
             break;
         }
         presioneTeclaParaContinuar();
